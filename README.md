@@ -55,10 +55,19 @@ To save your local modifications back to this repository:
    git commit -m "Describe the change you made"
    ```
 
-4. Push the commit to the remote repository:
+4. (Optional) If this is your first commit on this machine, configure your Git identity so the commit is attributed to you:
+
+   ```bash
+   git config --global user.name "Your Name"
+   git config --global user.email "you@example.com"
+   ```
+
+5. Push the commit to the remote repository:
 
    ```bash
    git push origin work
    ```
 
 If you are working on a different branch, replace `work` with your branch name in the push command.
+
+If Git reports that the branch has no upstream set, run `git push -u origin work` once so future `git push` commands can omit the branch name.
