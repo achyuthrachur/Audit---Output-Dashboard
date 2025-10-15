@@ -1,6 +1,12 @@
 # Audit Output Dashboard
 
-This repository contains a Streamlit application that visualises compliance risk metrics sourced from the provided "CIP CDD Compliance Questionnaire" workbook.
+The CIP/CDD Audit Risk Assessment dashboard is an interactive Streamlit experience that helps assurance teams understand the status of Customer Identification Program (CIP) and Customer Due Diligence (CDD) controls. It loads the latest questionnaire results, computes summary metrics, and presents the data through linked visualisations:
+
+- Executive view of overall compliance, category performance, and record-level detail.
+- Gap analysis with heat maps, Sankey flows, priority bubbles, and a control-level waterfall that quantify the cumulative deficit.
+- Remediation planning workspace that plots timelines, models remediation scenarios, and surfaces high-risk requirements.
+
+Explore the live deployment here: https://audit---output-dashboard-demo.streamlit.app/
 
 ## Getting started
 
@@ -23,12 +29,11 @@ This repository contains a Streamlit application that visualises compliance risk
 
 ## Project structure
 
-- `scripts/convert_excel_to_csv.py` – converts the Excel source into a cleaned CSV used by the dashboard.
-- `data/compliance_dashboard_data.csv` – pre-generated dataset powering the app.
-- `data_manager.py` – data access helpers and filter utilities.
-- `charts.py` – Plotly chart builders for each dashboard component.
-- `app.py` – Streamlit UI with combined and per-branch views plus interactive controls.
-- `app.py` – Streamlit UI with multi-page navigation and interactive controls.
+- `scripts/convert_excel_to_csv.py` - converts the Excel source into a cleaned CSV used by the dashboard.
+- `data/compliance_dashboard_data.csv` - pre-generated dataset powering the app.
+- `data_manager.py` - data access helpers and filter utilities.
+- `charts.py` - Plotly chart builders for each dashboard component.
+- `app.py` - Streamlit UI with multi-page navigation and interactive controls.
 
 ## Regenerating data
 
