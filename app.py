@@ -269,15 +269,6 @@ def main() -> None:
         return
 
     handler(filtered)
-    elif page == "Executive Overview":
-    page = st.radio("Navigation", ["Executive Overview", "Gap Analysis", "Remediation Planning"], horizontal=True)
-
-    if page == "Executive Overview":
-        _page_overview(filtered)
-    elif page == "Gap Analysis":
-        _page_gap_analysis(filtered)
-    else:
-        _page_remediation(filtered)
 
 
 if __name__ == "__main__":
