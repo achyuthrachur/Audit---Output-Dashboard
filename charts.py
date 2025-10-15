@@ -59,6 +59,8 @@ def _grid_dimensions(count: int, columns: int) -> int:
 
 
 def heatmap_matrix(records: Sequence[RequirementRecord], columns: int = 5) -> go.Figure:
+    cip = sorted((rec for rec in records if rec.category == "CIP"), key=lambda rec: rec.id)
+    cdd = sorted((rec for rec in records if rec.category == "CDD"), key=lambda rec: rec.id)
     cip = [rec for rec in records if rec.category == "CIP"]
     cdd = [rec for rec in records if rec.category == "CDD"]
 
@@ -123,6 +125,28 @@ def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
     impacts = []
     for record in records:
         if record.status == "Met":
+            delta = 0.0
+        elif record.status == "Partially Meets":
+            delta = -0.5
+        else:
+            delta = -1.0
+        impacts.append(
+            {
+                "label": record.id,
+                "delta": delta,
+                "section": record.section,
+                "status": record.status,
+            }
+        )
+
+    total_gap = round(sum(item["delta"] for item in impacts), 2)
+    measure = ["relative" for _ in impacts]
+    text = [f"{item['delta']:+.1f}" for item in impacts]
+    marker_colors = [
+        "#90A4AE",
+        *[STATUS_COLORS.get(item["status"], "#1E88E5") for item in impacts],
+        "#1E88E5",
+    ]
             delta = 0
         elif record.status == "Partially Meets":
             delta = -50
@@ -150,7 +174,7 @@ def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
         waterfallgap=0.2,
         margin=dict(t=40, b=80, l=40, r=40),
         xaxis=dict(tickangle=45),
-        yaxis=dict(title="Score Impact"),
+        yaxis=dict(title="Gap Contribution", tickformat="+.1f"),
     )
     return fig
 

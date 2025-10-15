@@ -27,6 +27,7 @@ This repository contains a Streamlit application that visualises compliance risk
 - `data/compliance_dashboard_data.csv` – pre-generated dataset powering the app.
 - `data_manager.py` – data access helpers and filter utilities.
 - `charts.py` – Plotly chart builders for each dashboard component.
+- `app.py` – Streamlit UI with combined and per-branch views plus interactive controls.
 - `app.py` – Streamlit UI with multi-page navigation and interactive controls.
 
 ## Regenerating data
@@ -55,6 +56,14 @@ To save your local modifications back to this repository:
    git commit -m "Describe the change you made"
    ```
 
+4. (Optional) If this is your first commit on this machine, configure your Git identity so the commit is attributed to you:
+
+   ```bash
+   git config --global user.name "Your Name"
+   git config --global user.email "you@example.com"
+   ```
+
+5. Push the commit to the remote repository:
 4. Push the commit to the remote repository:
 
    ```bash
@@ -62,3 +71,5 @@ To save your local modifications back to this repository:
    ```
 
 If you are working on a different branch, replace `work` with your branch name in the push command.
+
+If Git reports that the branch has no upstream set, run `git push -u origin work` once so future `git push` commands can omit the branch name.
