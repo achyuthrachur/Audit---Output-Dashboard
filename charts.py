@@ -232,7 +232,13 @@ def sankey_figure(records: Sequence[RequirementRecord]) -> go.Figure:
     fig = go.Figure(
         go.Sankey(
             arrangement="snap",
-            node=dict(label=[*categories, *statuses], pad=15, thickness=20, color="#1E88E5"),
+            node=dict(
+                label=[*categories, *statuses],
+                pad=15,
+                thickness=20,
+                color="#1E88E5",
+                font={"color": "#FFFFFF", "size": 14},
+            ),
             link=dict(source=source, target=target, value=values, color=colors),
         )
     )
@@ -241,32 +247,46 @@ def sankey_figure(records: Sequence[RequirementRecord]) -> go.Figure:
 
 
 def priority_bubble(records: Sequence[RequirementRecord]) -> go.Figure:
-    scatter_x = []
-    scatter_y = []
-    text = []
-    colors = []
-
-    for idx, record in enumerate(records):
-        difficulty = 1 + (idx % 10)
-        scatter_x.append(difficulty)
-        scatter_y.append(record.risk_severity)
-        text.append(record.id)
-        colors.append(STATUS_COLORS.get(record.status, "#1E88E5"))
+    ordered = sorted(
+        records,
+        key=lambda rec: (-rec.risk_severity, _id_sort_value(rec.id)),
+    )
+    x_positions = list(range(1, len(ordered) + 1))
+    colors = [STATUS_COLORS.get(record.status, "#1E88E5") for record in ordered]
+    customdata = [
+        (record.id, record.risk_severity, record.status, record.section) for record in ordered
+    ]
 
     fig = go.Figure(
         data=go.Scatter(
-            x=scatter_x,
-            y=scatter_y,
-            text=text,
-            mode="markers+text",
-            marker=dict(size=30, color=colors, opacity=0.8),
-            textposition="middle center",
+            x=x_positions,
+            y=[record.risk_severity for record in ordered],
+            mode="markers",
+            marker=dict(
+                size=28,
+                color=colors,
+                opacity=0.85,
+                line=dict(color="#1F1F1F", width=1),
+            ),
+            customdata=customdata,
+            hovertemplate=(
+                "<b>%{customdata[0]}</b><br>"
+                "Risk Severity: %{customdata[1]:.1f}<br>"
+                "Status: %{customdata[2]}<br>"
+                "Section: %{customdata[3]}<extra></extra>"
+            ),
         )
     )
     fig.update_layout(
-        xaxis=dict(title="Implementation Difficulty", range=[0, 11]),
+        xaxis=dict(
+            title="Implementation Difficulty Index",
+            tickmode="linear",
+            dtick=1,
+            range=[0, len(ordered) + 1],
+        ),
         yaxis=dict(title="Risk Severity", range=[0, 100]),
         margin=dict(t=40, b=40, l=40, r=40),
+        showlegend=False,
     )
     return fig
 
