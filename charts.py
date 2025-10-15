@@ -21,9 +21,15 @@ STATUS_COLORS = {
 def _id_sort_value(identifier: str) -> tuple[int, int, str]:
     """Sort CIP IDs before CDD IDs and use numeric order within each group."""
     normalized = identifier.upper()
-    prefix_rank = 0 if normalized.startswith("CIP") else 1
-    match = re.search(r"(\d+)", normalized)
-    number = int(match.group(1)) if match else 0
+    if "CIP" in normalized:
+        prefix_rank = 0
+    elif "CDD" in normalized:
+        prefix_rank = 1
+    else:
+        prefix_rank = 2
+
+    numbers = re.findall(r"(\d+)", normalized)
+    number = int(numbers[-1]) if numbers else 0
     return prefix_rank, number, identifier
 
 
@@ -143,32 +149,35 @@ def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
     if not records:
         return go.Figure()
 
-    sorted_records = sorted(records, key=lambda rec: rec.compliance_score)
-    base_score = 100.0
-    weight = 1 / len(sorted_records)
+    status_delta = {
+        "Met": 0.0,
+        "Partially Meets": -0.5,
+        "Does Not Meet": -1.0,
+    }
 
+    sorted_records = sorted(records, key=lambda rec: _id_sort_value(rec.id))
     impacts = [
         {
             "label": record.id,
-            "delta": (record.compliance_score - base_score) * weight,
+            "delta": status_delta.get(record.status, 0.0),
             "section": record.section,
             "status": record.status,
         }
         for record in sorted_records
     ]
 
+    base_score = 0.0
     cumulative_delta = sum(item["delta"] for item in impacts)
-    actual_score = base_score + cumulative_delta
 
-    measure = ["total", *["relative" for _ in impacts], "total"]
-    x_values = ["Target Score", *[item["label"] for item in impacts], "Actual Score"]
-    y_values = [base_score, *[item["delta"] for item in impacts], actual_score]
-    text_values = [f"{base_score:.1f}%", *[f"{item['delta']:+.1f}" for item in impacts], f"{actual_score:.1f}%"]
+    measure = ["absolute", *["relative" for _ in impacts], "total"]
+    x_values = ["Target (0)", *[item["label"] for item in impacts], "Cumulative Gap"]
+    y_values = [base_score, *[item["delta"] for item in impacts], cumulative_delta]
+    text_values = [f"{base_score:.1f}", *[f"{item['delta']:+.1f}" for item in impacts], f"{cumulative_delta:.1f}"]
 
     customdata = [
-        ("Baseline", "Target Score", f"Score: {base_score:.1f}%"),
-        *[(item["section"], item["status"], f"Contribution: {item['delta']:+.1f} pts") for item in impacts],
-        ("All Controls", "Actual Score", f"Average: {actual_score:.1f}%"),
+        ("Baseline", "Target Score", f"Target: {base_score:.1f}"),
+        *[(item["section"], item["status"], f"Impact: {item['delta']:+.1f}") for item in impacts],
+        ("All Controls", "Cumulative", f"Gap: {cumulative_delta:.1f}"),
     ]
 
     fig = go.Figure(
@@ -195,7 +204,7 @@ def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
         waterfallgap=0.2,
         margin=dict(t=40, b=80, l=40, r=40),
         xaxis=dict(tickangle=45),
-        yaxis=dict(title="Contribution to Average Score", tickformat="+.1f"),
+        yaxis=dict(title="Cumulative Gap", tickformat="+.1f"),
     )
     return fig
 

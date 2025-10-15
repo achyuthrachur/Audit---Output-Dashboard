@@ -32,6 +32,11 @@ st.set_page_config(
 )
 
 
+def _switch_page(page: str) -> None:
+    st.session_state["active_page"] = page
+    st.experimental_rerun()
+
+
 def _filter_controls() -> tuple[list[str], list[str], str]:
     st.markdown("### Filters")
     col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
@@ -86,9 +91,12 @@ def _page_overview(records: list[RequirementRecord]) -> None:
 
     st.markdown("---")
     action_cols = st.columns(2)
-    if action_cols[0].button("View Gaps", key="overview_view_gaps"):
-        st.session_state["active_page"] = "Gap Analysis"
-        st.experimental_rerun()
+    action_cols[0].button(
+        "View Gaps",
+        key="overview_view_gaps",
+        on_click=_switch_page,
+        args=("Gap Analysis",),
+    )
 
     if action_cols[1].button("Export Report", key="overview_export_report"):
         st.info("Report export is not yet available. Please check back soon.")
