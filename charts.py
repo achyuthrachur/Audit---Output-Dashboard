@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+import re
 from datetime import date, timedelta
 from typing import List, Sequence
 
@@ -15,6 +16,15 @@ STATUS_COLORS = {
     "Partially Meets": "#FFC107",
     "Does Not Meet": "#F44336",
 }
+
+
+def _id_sort_value(identifier: str) -> tuple[int, int, str]:
+    """Sort CIP IDs before CDD IDs and use numeric order within each group."""
+    normalized = identifier.upper()
+    prefix_rank = 0 if normalized.startswith("CIP") else 1
+    match = re.search(r"(\d+)", normalized)
+    number = int(match.group(1)) if match else 0
+    return prefix_rank, number, identifier
 
 
 def compliance_gauge(overall_score: float, status_counts: dict[str, int]) -> go.Figure:
@@ -45,7 +55,7 @@ def compliance_gauge(overall_score: float, status_counts: dict[str, int]) -> go.
             dict(
                 x=0.5,
                 y=-0.25,
-                text=f"<b>{met} Met</b> • <b>{partial} Partial</b> • <b>{gaps} Gaps</b>",
+                text=f"<b>{met} Met</b> - <b>{partial} Partial</b> - <b>{gaps} Gaps</b>",
                 showarrow=False,
                 font={"size": 16},
             )
@@ -59,8 +69,8 @@ def _grid_dimensions(count: int, columns: int) -> int:
 
 
 def heatmap_matrix(records: Sequence[RequirementRecord], columns: int = 5) -> go.Figure:
-    cip = sorted((rec for rec in records if rec.category == "CIP"), key=lambda rec: rec.id)
-    cdd = sorted((rec for rec in records if rec.category == "CDD"), key=lambda rec: rec.id)
+    cip = sorted((rec for rec in records if rec.category == "CIP"), key=lambda rec: _id_sort_value(rec.id))
+    cdd = sorted((rec for rec in records if rec.category == "CDD"), key=lambda rec: _id_sort_value(rec.id))
 
     cip_rows = _grid_dimensions(len(cip), columns)
     cdd_rows = _grid_dimensions(len(cdd), columns)
@@ -102,18 +112,28 @@ def heatmap_matrix(records: Sequence[RequirementRecord], columns: int = 5) -> go
             showscale=False,
         )
     )
-    y_labels = [
-        *("CIP" for _ in range(cip_rows)),
-        *("CDD" for _ in range(cdd_rows)),
-    ]
     fig.update_layout(
         height=360,
         margin=dict(t=40, b=40, l=40, r=40),
         xaxis=dict(showgrid=False, showticklabels=False, zeroline=False),
         yaxis=dict(showgrid=False, showticklabels=False, zeroline=False),
         annotations=[
-            dict(x=-0.1, y=1 - (cip_rows - 0.5) / total_rows, text="CIP Requirements", showarrow=False, xref="paper", yref="paper"),
-            dict(x=-0.1, y=(0.5) / total_rows, text="CDD Requirements", showarrow=False, xref="paper", yref="paper"),
+            dict(
+                x=-0.1,
+                y=1 - (cip_rows - 0.5) / total_rows if total_rows else 1,
+                text="CIP Requirements",
+                showarrow=False,
+                xref="paper",
+                yref="paper",
+            ),
+            dict(
+                x=-0.1,
+                y=(0.5) / total_rows if total_rows else 0,
+                text="CDD Requirements",
+                showarrow=False,
+                xref="paper",
+                yref="paper",
+            ),
         ],
     )
     return fig
@@ -140,11 +160,10 @@ def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
     cumulative_delta = sum(item["delta"] for item in impacts)
     actual_score = base_score + cumulative_delta
 
-    measure = ["absolute", *["relative" for _ in impacts], "total"]
+    measure = ["total", *["relative" for _ in impacts], "total"]
     x_values = ["Target Score", *[item["label"] for item in impacts], "Actual Score"]
     y_values = [base_score, *[item["delta"] for item in impacts], actual_score]
     text_values = [f"{base_score:.1f}%", *[f"{item['delta']:+.1f}" for item in impacts], f"{actual_score:.1f}%"]
-    marker_colors = ["#90A4AE", *[STATUS_COLORS.get(item["status"], "#1E88E5") for item in impacts], "#1E88E5"]
 
     customdata = [
         ("Baseline", "Target Score", f"Score: {base_score:.1f}%"),
@@ -160,13 +179,15 @@ def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
             y=y_values,
             text=text_values,
             textposition="outside",
-            marker={"color": marker_colors},
             connector={"line": {"color": "#1E88E5"}},
             customdata=customdata,
             hovertemplate=(
                 "%{x}<br>Section: %{customdata[0]}<br>Status: %{customdata[1]}<br>"
                 "%{customdata[2]}<extra></extra>"
             ),
+            increasing={"marker": {"color": STATUS_COLORS["Met"]}},
+            decreasing={"marker": {"color": STATUS_COLORS["Does Not Meet"]}},
+            totals={"marker": {"color": "#90A4AE"}},
         )
     )
     fig.update_layout(
