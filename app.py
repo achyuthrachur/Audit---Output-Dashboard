@@ -34,7 +34,10 @@ st.set_page_config(
 
 def _switch_page(page: str) -> None:
     st.session_state["active_page"] = page
-    st.experimental_rerun()
+    if hasattr(st, "rerun"):
+        st.rerun()
+    else:
+        st.experimental_rerun()
 
 
 def _filter_controls() -> tuple[list[str], list[str], str]:
