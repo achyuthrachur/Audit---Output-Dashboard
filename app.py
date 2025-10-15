@@ -54,7 +54,7 @@ def _render_metrics(records: list[RequirementRecord]) -> None:
     status_counts = compute_status_counts(records)
     categories = compute_category_scores(records)
     fig = compliance_gauge(overall, status_counts)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key="overview_gauge")
     st.caption(
         "The gauge summarizes the overall compliance score and shows how many controls are fully compliant, partial, or gaps."
     )
@@ -79,7 +79,7 @@ def _page_overview(records: list[RequirementRecord]) -> None:
     _render_metrics(records)
 
     st.markdown("#### Requirement Heat Map")
-    st.plotly_chart(heatmap_matrix(records), use_container_width=True)
+    st.plotly_chart(heatmap_matrix(records), use_container_width=True, key="overview_heatmap")
     st.caption(
         "Each tile represents a control with its compliance score colour-coded so you can quickly spot strong or weak areas."
     )
@@ -99,7 +99,7 @@ def _page_gap_analysis(records: list[RequirementRecord]) -> None:
     st.caption(
         "Starting from a perfect target, each bar subtracts the gap associated with a control so you can quantify total deficit."
     )
-    st.plotly_chart(waterfall_figure(records), use_container_width=True)
+    st.plotly_chart(waterfall_figure(records), use_container_width=True, key="gap_waterfall")
 
     col1, col2 = st.columns((3, 2))
     with col1:
@@ -107,13 +107,13 @@ def _page_gap_analysis(records: list[RequirementRecord]) -> None:
         st.caption(
             "Flows show how many CIP and CDD controls land in each status to highlight where most of the workload sits."
         )
-        st.plotly_chart(sankey_figure(records), use_container_width=True)
+        st.plotly_chart(sankey_figure(records), use_container_width=True, key="gap_sankey")
     with col2:
         st.subheader("Priority Matrix")
         st.caption(
             "Bubbles compare implementation difficulty against risk severity so you can focus on high-impact, manageable items first."
         )
-        st.plotly_chart(priority_bubble(records), use_container_width=True)
+        st.plotly_chart(priority_bubble(records), use_container_width=True, key="gap_priority")
 
     st.subheader("Critical Gaps")
     gaps = [rec for rec in records if rec.status == "Does Not Meet"]
@@ -178,7 +178,11 @@ def _render_simulator(records: list[RequirementRecord]) -> None:
         replace(rec, status="Met", compliance_score=100.0) if rec.id in selected_ids else rec
         for rec in records
     ]
-    st.plotly_chart(compliance_gauge(projected, compute_status_counts(simulated_records)), use_container_width=True)
+    st.plotly_chart(
+        compliance_gauge(projected, compute_status_counts(simulated_records)),
+        use_container_width=True,
+        key="simulator_gauge",
+    )
 
     st.caption(
         f"Fixing these {len(selected_ids)} items would achieve {projected}% compliance in the selected view."
@@ -202,7 +206,7 @@ def _page_remediation(records: list[RequirementRecord]) -> None:
     st.caption(
         "Indicative schedule of remediation windows to help plan sequencing and duration for outstanding work."
     )
-    st.plotly_chart(remediation_timeline(records), use_container_width=True)
+    st.plotly_chart(remediation_timeline(records), use_container_width=True, key="remediation_timeline")
 
     col1, col2 = st.columns((2, 3))
     with col1:
