@@ -59,16 +59,10 @@ def _render_metrics(records: list[RequirementRecord]) -> None:
         "The gauge summarizes the overall compliance score and shows how many controls are fully compliant, partial, or gaps."
     )
 
-    total_controls = len(records)
     col1, col2, col3 = st.columns(3)
-    col1.metric("Total Requirements", total_controls)
-
-    met = status_counts.get("Met", 0) + status_counts.get("Partially Meets", 0) + status_counts.get("Does Not Meet", 0)
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total Requirements", met)
+    col1.metric("Total Requirements", len(records))
     col2.metric("Compliance Score", f"{overall}%")
-    high_priority = status_counts.get("Does Not Meet", 0)
-    col3.metric("High Priority Gaps", high_priority)
+    col3.metric("High Priority Gaps", status_counts.get("Does Not Meet", 0))
 
     st.markdown("#### Category Scores")
     category_cols = st.columns(len(categories))
@@ -91,15 +85,13 @@ def _page_overview(records: list[RequirementRecord]) -> None:
     )
 
     st.markdown("---")
-    btn1, btn2 = st.columns(2)
-    if btn1.button("View Gaps"):
+    action_cols = st.columns(2)
+    if action_cols[0].button("View Gaps", key="overview_view_gaps"):
         st.session_state["active_page"] = "Gap Analysis"
         st.experimental_rerun()
 
-    st.markdown("---")
-    btn1, btn2 = st.columns(2)
-    btn1.button("View Gaps")
-    btn2.button("Export Report")
+    if action_cols[1].button("Export Report", key="overview_export_report"):
+        st.info("Report export is not yet available. Please check back soon.")
 
 
 def _page_gap_analysis(records: list[RequirementRecord]) -> None:
@@ -121,9 +113,6 @@ def _page_gap_analysis(records: list[RequirementRecord]) -> None:
         st.caption(
             "Bubbles compare implementation difficulty against risk severity so you can focus on high-impact, manageable items first."
         )
-        st.plotly_chart(sankey_figure(records), use_container_width=True)
-    with col2:
-        st.subheader("Priority Matrix")
         st.plotly_chart(priority_bubble(records), use_container_width=True)
 
     st.subheader("Critical Gaps")
@@ -168,7 +157,7 @@ def _render_simulator(records: list[RequirementRecord]) -> None:
             for rec in items:
                 key = f"sim_{rec.id}"
                 checked = st.checkbox(
-                    f"{rec.id} — {rec.section} ({rec.status})",
+                    f"{rec.id} - {rec.section} ({rec.status})",
                     key=key,
                     value=st.session_state.get(key, False),
                 )
@@ -199,7 +188,7 @@ def _render_simulator(records: list[RequirementRecord]) -> None:
 def _render_requirement_details(records: list[RequirementRecord]) -> None:
     st.markdown("#### Requirement Detail List")
     for rec in records:
-        with st.expander(f"{rec.id} — {rec.section}"):
+        with st.expander(f"{rec.id} - {rec.section}"):
             st.markdown(f"**Status:** {rec.status}")
             st.markdown(f"**Compliance Score:** {rec.compliance_score}%")
             st.markdown(f"**Requirement:** {rec.requirement}")
