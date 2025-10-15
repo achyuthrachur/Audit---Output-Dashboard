@@ -237,8 +237,9 @@ def sankey_figure(records: Sequence[RequirementRecord]) -> go.Figure:
                 pad=15,
                 thickness=20,
                 color="#1E88E5",
-                font={"color": "#FFFFFF", "size": 14},
+                line=dict(color="#0D47A1", width=1),
             ),
+            textfont=dict(color="#FFFFFF", size=14),
             link=dict(source=source, target=target, value=values, color=colors),
         )
     )
