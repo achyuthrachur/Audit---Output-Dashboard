@@ -218,17 +218,33 @@ def main() -> None:
     filtered = filter_records(all_records, statuses=statuses, categories=categories, query=search)
     result_placeholder.metric("Results", f"{len(filtered)} of {len(all_records)}")
 
+    pages = [
+        "Combined Dashboard",
+        "Executive Overview",
+        "Gap Analysis",
+        "Remediation Planning",
+    ]
+
     if "active_page" not in st.session_state:
-        st.session_state["active_page"] = "Executive Overview"
+        st.session_state["active_page"] = pages[0]
 
     page = st.radio(
         "Navigation",
-        ["Executive Overview", "Gap Analysis", "Remediation Planning"],
+        pages,
         horizontal=True,
         key="active_page",
     )
 
-    if page == "Executive Overview":
+    if page == "Combined Dashboard":
+        st.header("Executive Overview")
+        _page_overview(filtered)
+        st.divider()
+        st.header("Gap Analysis")
+        _page_gap_analysis(filtered)
+        st.divider()
+        st.header("Remediation Planning")
+        _page_remediation(filtered)
+    elif page == "Executive Overview":
         _page_overview(filtered)
     elif page == "Gap Analysis":
         _page_gap_analysis(filtered)

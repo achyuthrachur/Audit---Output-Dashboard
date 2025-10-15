@@ -27,7 +27,7 @@ This repository contains a Streamlit application that visualises compliance risk
 - `data/compliance_dashboard_data.csv` – pre-generated dataset powering the app.
 - `data_manager.py` – data access helpers and filter utilities.
 - `charts.py` – Plotly chart builders for each dashboard component.
-- `app.py` – Streamlit UI with multi-page navigation and interactive controls.
+- `app.py` – Streamlit UI with combined and per-branch views plus interactive controls.
 
 ## Regenerating data
 
