@@ -162,6 +162,20 @@ def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
         go.Waterfall(
             orientation="v",
             measure=["absolute", *measure, "total"],
+            x=["Target Score", *[item["label"] for item in impacts], "Total Gap"],
+            textposition="outside",
+            text=["0", *text, f"{total_gap:+.1f}"],
+            y=[0.0, *[item["delta"] for item in impacts], total_gap],
+            marker={"color": marker_colors},
+            connector={"line": {"color": "#1E88E5"}},
+            customdata=[
+                ("Baseline", "Target"),
+                *[(item["section"], item["status"]) for item in impacts],
+                ("All Controls", "Cumulative"),
+            ],
+            hovertemplate=(
+                "%{x}<br>Section: %{customdata[0]}<br>Status: %{customdata[1]}<br>Contribution: %{y:+.1f}<extra></extra>"
+            ),
             x=["Potential Score", *[item["label"] for item in impacts], "Actual Score"],
             textposition="outside",
             text=["", *text, ""],

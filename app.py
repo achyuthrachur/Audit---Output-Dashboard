@@ -255,6 +255,20 @@ def main() -> None:
         st.divider()
         st.header("Remediation Planning")
         _page_remediation(filtered)
+        return
+
+    handlers = {
+        "Executive Overview": _page_overview,
+        "Gap Analysis": _page_gap_analysis,
+        "Remediation Planning": _page_remediation,
+    }
+
+    handler = handlers.get(page)
+    if handler is None:
+        st.error("Unknown page selection.")
+        return
+
+    handler(filtered)
     elif page == "Executive Overview":
     page = st.radio("Navigation", ["Executive Overview", "Gap Analysis", "Remediation Planning"], horizontal=True)
 
