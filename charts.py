@@ -264,7 +264,7 @@ def priority_bubble(records: Sequence[RequirementRecord]) -> go.Figure:
             y=[record.risk_severity for record in ordered],
             mode="markers",
             marker=dict(
-                size=28,
+                size=26,
                 color=colors,
                 opacity=0.85,
                 line=dict(color="#1F1F1F", width=1),
@@ -280,12 +280,15 @@ def priority_bubble(records: Sequence[RequirementRecord]) -> go.Figure:
     )
     fig.update_layout(
         xaxis=dict(
-            title="Implementation Difficulty Index",
             tickmode="linear",
             dtick=1,
-            range=[0, len(ordered) + 1],
+            range=[0.5, len(ordered) + 0.5],
+            showline=False,
+            showticklabels=False,
+            showgrid=False,
+            zeroline=False,
         ),
-        yaxis=dict(title="Risk Severity", range=[0, 100]),
+        yaxis=dict(title="Risk Severity", range=[-5, 105]),
         margin=dict(t=40, b=40, l=40, r=40),
         showlegend=False,
     )
