@@ -116,6 +116,8 @@ def heatmap_matrix(records: Sequence[RequirementRecord], columns: int = 5) -> go
             hoverinfo="text",
             hovertext=hover,
             showscale=False,
+            xgap=2,
+            ygap=2,
         )
     )
     fig.update_layout(
