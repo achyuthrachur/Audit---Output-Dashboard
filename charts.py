@@ -122,7 +122,7 @@ def heatmap_matrix(records: Sequence[RequirementRecord], columns: int = 5) -> go
         height=360,
         margin=dict(t=40, b=40, l=40, r=40),
         xaxis=dict(showgrid=False, showticklabels=False, zeroline=False),
-        yaxis=dict(showgrid=False, showticklabels=False, zeroline=False),
+        yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, autorange="reversed"),
         annotations=[
             dict(
                 x=-0.1,
