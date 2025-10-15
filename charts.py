@@ -61,8 +61,6 @@ def _grid_dimensions(count: int, columns: int) -> int:
 def heatmap_matrix(records: Sequence[RequirementRecord], columns: int = 5) -> go.Figure:
     cip = sorted((rec for rec in records if rec.category == "CIP"), key=lambda rec: rec.id)
     cdd = sorted((rec for rec in records if rec.category == "CDD"), key=lambda rec: rec.id)
-    cip = [rec for rec in records if rec.category == "CIP"]
-    cdd = [rec for rec in records if rec.category == "CDD"]
 
     cip_rows = _grid_dimensions(len(cip), columns)
     cdd_rows = _grid_dimensions(len(cdd), columns)
@@ -122,65 +120,53 @@ def heatmap_matrix(records: Sequence[RequirementRecord], columns: int = 5) -> go
 
 
 def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
-    impacts = []
-    for record in records:
-        if record.status == "Met":
-            delta = 0.0
-        elif record.status == "Partially Meets":
-            delta = -0.5
-        else:
-            delta = -1.0
-        impacts.append(
-            {
-                "label": record.id,
-                "delta": delta,
-                "section": record.section,
-                "status": record.status,
-            }
-        )
+    if not records:
+        return go.Figure()
 
-    total_gap = round(sum(item["delta"] for item in impacts), 2)
-    measure = ["relative" for _ in impacts]
-    text = [f"{item['delta']:+.1f}" for item in impacts]
-    marker_colors = [
-        "#90A4AE",
-        *[STATUS_COLORS.get(item["status"], "#1E88E5") for item in impacts],
-        "#1E88E5",
+    sorted_records = sorted(records, key=lambda rec: rec.compliance_score)
+    base_score = 100.0
+    weight = 1 / len(sorted_records)
+
+    impacts = [
+        {
+            "label": record.id,
+            "delta": (record.compliance_score - base_score) * weight,
+            "section": record.section,
+            "status": record.status,
+        }
+        for record in sorted_records
     ]
-            delta = 0
-        elif record.status == "Partially Meets":
-            delta = -50
-        else:
-            delta = -100
-        impacts.append({"label": record.id, "delta": delta, "section": record.section, "status": record.status})
 
-    base = 100
-    measure = ["relative" for _ in impacts]
-    text = [f"{item['delta']}" for item in impacts]
+    cumulative_delta = sum(item["delta"] for item in impacts)
+    actual_score = base_score + cumulative_delta
+
+    measure = ["absolute", *["relative" for _ in impacts], "total"]
+    x_values = ["Target Score", *[item["label"] for item in impacts], "Actual Score"]
+    y_values = [base_score, *[item["delta"] for item in impacts], actual_score]
+    text_values = [f"{base_score:.1f}%", *[f"{item['delta']:+.1f}" for item in impacts], f"{actual_score:.1f}%"]
+    marker_colors = ["#90A4AE", *[STATUS_COLORS.get(item["status"], "#1E88E5") for item in impacts], "#1E88E5"]
+
+    customdata = [
+        ("Baseline", "Target Score", f"Score: {base_score:.1f}%"),
+        *[(item["section"], item["status"], f"Contribution: {item['delta']:+.1f} pts") for item in impacts],
+        ("All Controls", "Actual Score", f"Average: {actual_score:.1f}%"),
+    ]
 
     fig = go.Figure(
         go.Waterfall(
             orientation="v",
-            measure=["absolute", *measure, "total"],
-            x=["Target Score", *[item["label"] for item in impacts], "Total Gap"],
+            measure=measure,
+            x=x_values,
+            y=y_values,
+            text=text_values,
             textposition="outside",
-            text=["0", *text, f"{total_gap:+.1f}"],
-            y=[0.0, *[item["delta"] for item in impacts], total_gap],
             marker={"color": marker_colors},
             connector={"line": {"color": "#1E88E5"}},
-            customdata=[
-                ("Baseline", "Target"),
-                *[(item["section"], item["status"]) for item in impacts],
-                ("All Controls", "Cumulative"),
-            ],
+            customdata=customdata,
             hovertemplate=(
-                "%{x}<br>Section: %{customdata[0]}<br>Status: %{customdata[1]}<br>Contribution: %{y:+.1f}<extra></extra>"
+                "%{x}<br>Section: %{customdata[0]}<br>Status: %{customdata[1]}<br>"
+                "%{customdata[2]}<extra></extra>"
             ),
-            x=["Potential Score", *[item["label"] for item in impacts], "Actual Score"],
-            textposition="outside",
-            text=["", *text, ""],
-            y=[base, *[item["delta"] for item in impacts], 0],
-            connector={"line": {"color": "#1E88E5"}},
         )
     )
     fig.update_layout(
@@ -188,7 +174,7 @@ def waterfall_figure(records: Sequence[RequirementRecord]) -> go.Figure:
         waterfallgap=0.2,
         margin=dict(t=40, b=80, l=40, r=40),
         xaxis=dict(tickangle=45),
-        yaxis=dict(title="Gap Contribution", tickformat="+.1f"),
+        yaxis=dict(title="Contribution to Average Score", tickformat="+.1f"),
     )
     return fig
 
