@@ -212,6 +212,7 @@ def _page_remediation(records: list[RequirementRecord]) -> None:
 
 def main() -> None:
     all_records = _load_records()
+    st.title("CIP/CDD Audit Risk Assessment")
     statuses, categories, search, result_placeholder = _filter_controls()
 
     filtered = filter_records(all_records, statuses=statuses, categories=categories, query=search)
