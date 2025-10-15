@@ -28,6 +28,7 @@ This repository contains a Streamlit application that visualises compliance risk
 - `data_manager.py` – data access helpers and filter utilities.
 - `charts.py` – Plotly chart builders for each dashboard component.
 - `app.py` – Streamlit UI with combined and per-branch views plus interactive controls.
+- `app.py` – Streamlit UI with multi-page navigation and interactive controls.
 
 ## Regenerating data
 
@@ -63,6 +64,7 @@ To save your local modifications back to this repository:
    ```
 
 5. Push the commit to the remote repository:
+4. Push the commit to the remote repository:
 
    ```bash
    git push origin work
