@@ -62,6 +62,10 @@ def _render_metrics(records: list[RequirementRecord]) -> None:
     total_controls = len(records)
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Requirements", total_controls)
+
+    met = status_counts.get("Met", 0) + status_counts.get("Partially Meets", 0) + status_counts.get("Does Not Meet", 0)
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total Requirements", met)
     col2.metric("Compliance Score", f"{overall}%")
     high_priority = status_counts.get("Does Not Meet", 0)
     col3.metric("High Priority Gaps", high_priority)
@@ -91,6 +95,10 @@ def _page_overview(records: list[RequirementRecord]) -> None:
     if btn1.button("View Gaps"):
         st.session_state["active_page"] = "Gap Analysis"
         st.experimental_rerun()
+
+    st.markdown("---")
+    btn1, btn2 = st.columns(2)
+    btn1.button("View Gaps")
     btn2.button("Export Report")
 
 
@@ -113,6 +121,9 @@ def _page_gap_analysis(records: list[RequirementRecord]) -> None:
         st.caption(
             "Bubbles compare implementation difficulty against risk severity so you can focus on high-impact, manageable items first."
         )
+        st.plotly_chart(sankey_figure(records), use_container_width=True)
+    with col2:
+        st.subheader("Priority Matrix")
         st.plotly_chart(priority_bubble(records), use_container_width=True)
 
     st.subheader("Critical Gaps")
@@ -244,14 +255,29 @@ def main() -> None:
         st.divider()
         st.header("Remediation Planning")
         _page_remediation(filtered)
+        return
+
+    handlers = {
+        "Executive Overview": _page_overview,
+        "Gap Analysis": _page_gap_analysis,
+        "Remediation Planning": _page_remediation,
+    }
+
+    handler = handlers.get(page)
+    if handler is None:
+        st.error("Unknown page selection.")
+        return
+
+    handler(filtered)
     elif page == "Executive Overview":
+    page = st.radio("Navigation", ["Executive Overview", "Gap Analysis", "Remediation Planning"], horizontal=True)
+
+    if page == "Executive Overview":
         _page_overview(filtered)
     elif page == "Gap Analysis":
         _page_gap_analysis(filtered)
-    elif page == "Remediation Planning":
-        _page_remediation(filtered)
     else:
-        st.warning("Select a dashboard section to continue.")
+        _page_remediation(filtered)
 
 
 if __name__ == "__main__":
